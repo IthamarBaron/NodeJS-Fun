@@ -36,5 +36,4 @@ ws.addEventListener('message', (message) => {
         }, 3000); // Remove warning after 3 seconds
     }
 
-    // Other message types (e.g., updatePixel) remain unchanged
 });
