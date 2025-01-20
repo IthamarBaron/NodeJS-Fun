@@ -139,3 +139,20 @@ ws.addEventListener('message', (message) => {
     }
 });
 
+ws.addEventListener('message', (message) => {
+    const data = JSON.parse(message.data);
+
+    if (data.type === 'canvasState') {
+        const canvasData = data.canvas;
+
+        // Populate the grid with the canvas data
+        canvasData.forEach((row, y) => {
+            row.forEach((color, x) => {
+                const cell = document.querySelector(`.cell[data-row="${y}"][data-col="${x}"]`);
+                if (cell) {
+                    cell.style.backgroundColor = color;
+                }
+            });
+        });
+    }
+});
