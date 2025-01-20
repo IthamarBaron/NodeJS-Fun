@@ -1,6 +1,8 @@
 const WebSocket = require('ws');
+const cooldownSeconds = 10; // Cooldown in seconds
+const lastPixelPlacement = new Map(); // Tracks last placement timestamps per client
 
-const canvas = Array(25)
+const canvas = Array(25) // rows
     .fill(null)
     .map(() => Array(30).fill('#FFFFFF')); // Adjust columns and default color
 
@@ -51,7 +53,7 @@ function handleJoin(ws, data) {
     console.log(`${name} joined the game`);
 
 
-    // Send the full canvas state to the new client
+    // Send the full canvas state to the new client 
     ws.send(JSON.stringify({ type: 'canvasState', canvas }));
 
     // Broadcast the updated player list to all clients
@@ -65,19 +67,44 @@ function handleJoin(ws, data) {
 function handlePixelPlaced(ws, data) {
     const { color, x, y } = data;
 
-    // Log the pixel placement
-    console.log(`Pixel placed: Color=${color}, X=${x}, Y=${y}`);
+    const now = Date.now();
+    // Check if the player has a valid name
+    if (!ws.name) {
+        ws.send(JSON.stringify({ type: 'error', message: 'Player not recognized' }));
+        return;
+    }
+    // Check the last placement time for this player
+    const lastPlacement = lastPixelPlacement.get(ws.name) || 0;
+
+
+    if (now - lastPlacement < cooldownSeconds * 1000) {
+        // Reject if within cooldown period
+        ws.send(
+            JSON.stringify({
+                type: 'error',
+                message: `Cooldown active. Please wait ${Math.ceil(
+                    (cooldownSeconds * 1000 - (now - lastPlacement)) / 1000
+                )} seconds.`,
+            })
+        );
+        return;
+    }
+
+    // Update the last placement time
+    lastPixelPlacement.set(ws.name, now);
 
     // Update the canvas state
     canvas[y][x] = color;
 
-    // Broadcast the pixel placement to all clients
+    // Broadcast the pixel update
     broadcast({
         type: 'updatePixel',
-        color: color || '#FFFFFF', // Default to white if no color is provided
+        color,
         x,
         y,
     });
+
+    console.log(`${ws.name} placed a pixel at (${x}, ${y}) with color ${color}`);
 }
 
 // Function to handle player disconnect
