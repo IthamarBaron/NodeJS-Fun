@@ -1,5 +1,9 @@
 const WebSocket = require('ws');
 
+const canvas = Array(25)
+    .fill(null)
+    .map(() => Array(30).fill('#FFFFFF')); // Adjust columns and default color
+
 // Create WebSocket server
 const wss = new WebSocket.Server({ port: 8080 });
 
@@ -46,6 +50,10 @@ function handleJoin(ws, data) {
 
     console.log(`${name} joined the game`);
 
+
+    // Send the full canvas state to the new client
+    ws.send(JSON.stringify({ type: 'canvasState', canvas }));
+
     // Broadcast the updated player list to all clients
     broadcast({
         type: 'update',
@@ -59,6 +67,9 @@ function handlePixelPlaced(ws, data) {
 
     // Log the pixel placement
     console.log(`Pixel placed: Color=${color}, X=${x}, Y=${y}`);
+
+    // Update the canvas state
+    canvas[y][x] = color;
 
     // Broadcast the pixel placement to all clients
     broadcast({
