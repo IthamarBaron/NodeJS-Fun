@@ -1,0 +1,20 @@
+// Handle the form submission
+const joinForm = document.getElementById('joinForm');
+const ws = new WebSocket('ws://localhost:8080'); // Connect to the WebSocket server
+
+joinForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const playerName = document.getElementById('playerName').value;
+
+    if (playerName) {
+        // Save the player's name in localStorage
+        localStorage.setItem('playerName', playerName);
+
+        // Send the player's name to the server
+        ws.send(JSON.stringify({ type: 'join', name: playerName }));
+        console.log(`Sent player name to server: ${playerName}`);
+
+        // Redirect to the game page
+        window.location.href = '../Place/place.html';
+    }
+});
