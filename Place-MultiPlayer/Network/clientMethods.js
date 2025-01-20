@@ -18,3 +18,23 @@ joinForm.addEventListener('submit', (e) => {
         window.location.href = '../Place/place.html';
     }
 });
+
+ws.addEventListener('message', (message) => {
+    const data = JSON.parse(message.data);
+
+    if (data.type === 'error') {
+        // Display the error message
+        console.warn(data.message);
+
+        // Optionally, show it in the UI
+        const cooldownElement = document.getElementById('cooldown');
+        cooldownElement.textContent = data.message;
+        cooldownElement.classList.add('cooldown-warning');
+
+        setTimeout(() => {
+            cooldownElement.classList.remove('cooldown-warning');
+        }, 3000); // Remove warning after 3 seconds
+    }
+
+    // Other message types (e.g., updatePixel) remain unchanged
+});
